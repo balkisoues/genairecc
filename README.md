@@ -1,8 +1,5 @@
 # Explainable Multi-Agent Generative Recommendation System for Personalized Learning
 
-**Master de Recherche – Generative AI**  
-**Projet 1**
-
 ---
 
 ## 📌 Project Overview
