@@ -1,16 +1,8 @@
 """
 agents/recommendation_agent.py
+recommendation agent: ranks and selects learning resources.
 
-Recommendation Agent: Ranks and selects learning resources.
-
-Input (reads from state):
-- generated_content: List[Dict]
-- learner_profile: Dict
-- learning_path: List[Dict]
-
-Output (writes to state):
-- recommendations: Dict
-- next_agent: 'explainability'
+input reads fromstate and output a dict with recc 
 """
 
 from typing import List, Dict, Any
@@ -21,17 +13,17 @@ from config.settings import Config
 
 
 class RecommendationAgent:
-    """Agent 4: Recommendation with hybrid filtering"""
+    """agent 4: recommendation with hybrid filtering"""
 
     def __init__(self):
         self.llm = Ollama(model=Config.model.llm_model)
         print("✓ Recommendation Agent initialized")
 
     def execute(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute recommendation"""
+        """execute recommendation"""
         print(" [RECOMMENDATION AGENT] Generating recommendations")
 
-        # Initialize agent_logs if needed
+        # initialize agent_logs if needed
         if 'agent_logs' not in state:
             state['agent_logs'] = []
 
@@ -48,7 +40,7 @@ class RecommendationAgent:
                 state['next_agent"'] = 'end'
                 return state
 
-            # Generate recommendations
+            # generate recommendations
             recommendations = self._generate_recommendations(profile, learning_path)
 
             state['recommendations'] = recommendations
@@ -70,17 +62,17 @@ class RecommendationAgent:
             return state
 
     def _rank_content(self, content: List[Dict], profile: Dict) -> List[Dict]:
-        """Rank content by relevance"""
+        """rank content by relevance"""
         scored_content = []
-
+	#score starts at 0 and we add point if difficulty matches learner lvel or if learner has high engageent level
         for item in content:
             score = 0.0
 
-            # Difficulty match
+            # diff match
             if item['difficulty'] == self._get_optimal_difficulty(profile):
                 score += 0.5
 
-            # Engagement prediction
+            # engagement prediction
             if profile.get('engagement_level') == 'high':
                 score += 0.3
 
@@ -89,8 +81,8 @@ class RecommendationAgent:
 
         return sorted(scored_content, key=lambda x: x['relevance_score'], reverse=True)
 
-    def _get_optimal_difficulty(self, profile: Dict) -> str:
-        """Determine optimal difficulty"""
+    def _get_optimal_difficulty(self, profile: Dict) -> str: #maps learner scores -> diff
+        """determine optimal difficulty"""
         score = profile.get('avg_score', 0)
         if score >= 85:
             return 'advanced'
@@ -118,11 +110,11 @@ class RecommendationAgent:
         ]
 
     def _generate_recommendations(self, profile: Dict, learning_path: List[Dict]) -> Dict[str, Any]:
-        """Generate recommendations (internal + external)"""
+        """ core logic """
         recommendations = []
 
         ranked_units = self._rank_content(learning_path, profile)
-
+	# + external ressources
         for unit in ranked_units:
             external = self._recommend_external(unit)
             recommendations.append({

@@ -1,15 +1,5 @@
 """
-utils/embeddings.py
-
-Centralized embedding utilities for the multi-agent system.
-Provides reusable functions for generating and managing embeddings.
-
-Benefits:
-- Single source of truth for embedding logic
-- Caching to avoid recomputation
-- Consistent embedding generation across agents
-- Easy to swap embedding models
-"""
+utils/embeddings.py"""
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
@@ -23,32 +13,23 @@ from config.settings import Config
 
 class EmbeddingManager:
     """
-    Manages embedding generation with caching and utility methods.
-    
-    Usage:
-        embedder = EmbeddingManager()
-        embedding = embedder.encode("Some text")
-        embeddings = embedder.encode_batch(["Text 1", "Text 2"])
+    embedding generation 
     """
     
     def __init__(self, model_name: Optional[str] = None, use_cache: bool = True):
         """
-        Initialize the embedding manager.
-        
-        Args:
-            model_name: Name of the sentence-transformers model
-            use_cache: Whether to cache embeddings to disk
+        embedding manager.
         """
-        self.model_name = model_name or Config.model.embedding_model
+        self.model_name = model_name or Config.model.embedding_model  #incase we dont have a model name defined
         self.model = SentenceTransformer(self.model_name)
-        self.use_cache = use_cache
+        self.use_cache = use_cache  #check caching to speed up process 
         
-        # Cache directory
+        # cache directory
         self.cache_dir = ".embedding_cache"
         if self.use_cache:
-            os.makedirs(self.cache_dir, exist_ok=True)
+            os.makedirs(self.cache_dir, exist_ok=True)	#create cache folder if its missing 
         
-        # In-memory cache
+        # in mem cache, no sidk 
         self._memory_cache: Dict[str, np.ndarray] = {}
         
         print(f"✓ EmbeddingManager initialized (model: {self.model_name})")
@@ -56,36 +37,29 @@ class EmbeddingManager:
     
     def encode(self, text: str, use_cache: bool = True) -> np.ndarray:
         """
-        Generate embedding for a single text.
-        
-        Args:
-            text: Input text to embed
-            use_cache: Whether to use cache for this encoding
-            
-        Returns:
-            Embedding vector as numpy array
+        generate embedding for a single text, input text to embedand returns embedding vector as numpy array
         """
         if not text or not isinstance(text, str):
             raise ValueError("Text must be a non-empty string")
         
-        # Check cache
+        # check cache 
         if use_cache and self.use_cache:
             cache_key = self._get_cache_key(text)
             
-            # Check memory cache first
+            # ceck memory cache 1st
             if cache_key in self._memory_cache:
                 return self._memory_cache[cache_key]
             
-            # Check disk cache
+            # check disk cache
             cached_embedding = self._load_from_cache(cache_key)
             if cached_embedding is not None:
                 self._memory_cache[cache_key] = cached_embedding
                 return cached_embedding
         
-        # Generate new embedding
+        # generate new embedding
         embedding = self.model.encode(text)
         
-        # Save to cache
+        # save to cache
         if use_cache and self.use_cache:
             cache_key = self._get_cache_key(text)
             self._memory_cache[cache_key] = embedding
@@ -96,25 +70,18 @@ class EmbeddingManager:
     
     def encode_batch(self, texts: List[str], batch_size: int = 32) -> np.ndarray:
         """
-        Generate embeddings for multiple texts efficiently.
-        
-        Args:
-            texts: List of texts to embed
-            batch_size: Batch size for processing
-            
-        Returns:
-            Array of embeddings (n_texts, embedding_dim)
+        gen embeddings for multiple texts efficiently.
         """
         if not texts:
             return np.array([])
         
-        # Filter out empty texts
+        #filter out empty texts
         valid_texts = [t for t in texts if t and isinstance(t, str)]
         
         if not valid_texts:
             raise ValueError("No valid texts to embed")
         
-        # Batch encode
+        # batch encode
         embeddings = self.model.encode(
             valid_texts, 
             batch_size=batch_size,
@@ -126,23 +93,17 @@ class EmbeddingManager:
     
     def compute_similarity(self, embedding1: np.ndarray, embedding2: np.ndarray) -> float:
         """
-        Compute cosine similarity between two embeddings.
-        
-        Args:
-            embedding1: First embedding vector
-            embedding2: Second embedding vector
-            
-        Returns:
-            Similarity score between -1 and 1
+        compute cosine similarity between two embeddings.
+          embedding1: First embedding vector and ebedding 2 and returns sim score between -1 and 1
         """
-        # Normalize
+        # normalize
         norm1 = np.linalg.norm(embedding1)
         norm2 = np.linalg.norm(embedding2)
         
         if norm1 == 0 or norm2 == 0:
             return 0.0
         
-        # Cosine similarity
+        # cosine similarity
         similarity = np.dot(embedding1, embedding2) / (norm1 * norm2)
         return float(similarity)
     
@@ -154,15 +115,7 @@ class EmbeddingManager:
         top_k: int = 5
     ) -> List[tuple]:
         """
-        Find most similar embeddings to a query.
-        
-        Args:
-            query_embedding: Query embedding vector
-            candidate_embeddings: Array of candidate embeddings (n, dim)
-            top_k: Number of top results to return
-            
-        Returns:
-            List of (index, similarity_score) tuples
+       find most similar embeddings to a query.
         """
         # Compute similarities
         similarities = []
@@ -170,14 +123,14 @@ class EmbeddingManager:
             sim = self.compute_similarity(query_embedding, candidate)
             similarities.append((i, sim))
         
-        # Sort by similarity (descending)
+        #sort by similarity (descending)
         similarities.sort(key=lambda x: x[1], reverse=True)
         
         return similarities[:top_k]
     
     
     def get_embedding_dimension(self) -> int:
-        """Get the dimension of embeddings from this model"""
+        """get the dimension of embeddings from this model"""
         return self.model.get_sentence_embedding_dimension()
     
     
@@ -191,19 +144,16 @@ class EmbeddingManager:
             print("✓ Cache cleared")
     
     
-    # ========================================================================
-    # PRIVATE HELPER METHODS
-    # ========================================================================
-    
+  
     def _get_cache_key(self, text: str) -> str:
-        """Generate cache key from text"""
+        """generate cache key from text"""
         # Use hash of text + model name for cache key
         content = f"{self.model_name}:{text}"
         return hashlib.md5(content.encode()).hexdigest()
     
     
     def _save_to_cache(self, cache_key: str, embedding: np.ndarray):
-        """Save embedding to disk cache"""
+        """save embedding to disk cache"""
         try:
             cache_path = os.path.join(self.cache_dir, f"{cache_key}.pkl")
             with open(cache_path, 'wb') as f:
@@ -225,16 +175,11 @@ class EmbeddingManager:
         return None
 
 
-# ============================================================================
-# CONVENIENCE FUNCTIONS
-# ============================================================================
-
-# Global instance (singleton pattern)
 _global_embedder: Optional[EmbeddingManager] = None
 
 
 def get_embedder() -> EmbeddingManager:
-    """Get or create global embedding manager instance"""
+    """get or create global embedding manager instance"""
     global _global_embedder
     if _global_embedder is None:
         _global_embedder = EmbeddingManager()
@@ -245,12 +190,6 @@ def encode_text(text: str) -> np.ndarray:
     """
     Convenience function to encode a single text.
     Uses global embedder instance.
-    
-    Args:
-        text: Text to embed
-        
-    Returns:
-        Embedding vector
     """
     return get_embedder().encode(text)
 
@@ -259,12 +198,6 @@ def encode_texts(texts: List[str]) -> np.ndarray:
     """
     Convenience function to encode multiple texts.
     Uses global embedder instance.
-    
-    Args:
-        texts: List of texts to embed
-        
-    Returns:
-        Array of embeddings
     """
     return get_embedder().encode_batch(texts)
 
@@ -272,13 +205,6 @@ def encode_texts(texts: List[str]) -> np.ndarray:
 def compute_similarity(text1: str, text2: str) -> float:
     """
     Compute semantic similarity between two texts.
-    
-    Args:
-        text1: First text
-        text2: Second text
-        
-    Returns:
-        Similarity score between -1 and 1
     """
     embedder = get_embedder()
     emb1 = embedder.encode(text1)
@@ -288,16 +214,10 @@ def compute_similarity(text1: str, text2: str) -> float:
 
 def profile_to_embedding(profile: Dict) -> np.ndarray:
     """
-    Convert learner profile dictionary to embedding.
-    Standardized across all agents.
-    
-    Args:
-        profile: Learner profile dictionary
-        
-    Returns:
-        Embedding vector
+    convert learner profile dictionary to embedding.
+    standardized across all agents.
     """
-    # Create natural language description
+    # create natural language description
     text = (
         f"Student {profile.get('id_student', 'unknown')} "
         f"in module {profile.get('code_module', 'unknown')}. "
@@ -314,31 +234,22 @@ def profile_to_embedding(profile: Dict) -> np.ndarray:
 
 def concept_to_embedding(concept: str, difficulty: str = "intermediate") -> np.ndarray:
     """
-    Convert learning concept to embedding.
-    
-    Args:
-        concept: Name of the concept
-        difficulty: Difficulty level
-        
-    Returns:
-        Embedding vector
+    convert learning concept to embedding.
     """
     text = f"{difficulty} level content about {concept}"
     return encode_text(text)
 
 
-# ============================================================================
-# TESTING
-# ============================================================================
+########################################### TESTING
+
 
 if __name__ == "__main__":
-    """Test the embedding utilities"""
+    """test the embedding utilities"""
     
-    print("="*60)
+    print("="*70)
     print("EMBEDDING UTILITIES TEST")
-    print("="*60)
     
-    # Test 1: Single embedding
+    # TEST 1: Single embedding
     print("\n[Test 1] Single text embedding:")
     embedder = EmbeddingManager()
     text = "Machine learning is a subset of artificial intelligence"
@@ -347,7 +258,7 @@ if __name__ == "__main__":
     print(f"  Embedding shape: {embedding.shape}")
     print(f"  Embedding dim: {embedder.get_embedding_dimension()}")
     
-    # Test 2: Batch embedding
+    # TEST 2: Batch embedding
     print("\n[Test 2] Batch embedding:")
     texts = [
         "Python programming fundamentals",
@@ -358,7 +269,7 @@ if __name__ == "__main__":
     print(f"  Number of texts: {len(texts)}")
     print(f"  Embeddings shape: {embeddings.shape}")
     
-    # Test 3: Similarity
+    # TEST 3: Similarity
     print("\n[Test 3] Semantic similarity:")
     text1 = "Python programming"
     text2 = "Coding in Python"
@@ -370,7 +281,7 @@ if __name__ == "__main__":
     print(f"  '{text1}' vs '{text2}': {sim_high:.3f}")
     print(f"  '{text1}' vs '{text3}': {sim_low:.3f}")
     
-    # Test 4: Profile embedding
+    # TEST 4: Profile embedding
     print("\n[Test 4] Profile to embedding:")
     profile = {
         'id_student': '28400',
@@ -386,7 +297,7 @@ if __name__ == "__main__":
     profile_emb = profile_to_embedding(profile)
     print(f"  Profile embedding shape: {profile_emb.shape}")
     
-    # Test 5: Cache
+    # TEST 5: Cache
     print("\n[Test 5] Cache test:")
     text = "Test caching functionality"
     
@@ -396,7 +307,7 @@ if __name__ == "__main__":
     time1 = time.time() - start
     
     start = time.time()
-    emb2 = embedder.encode(text, use_cache=True)  # Should be cached
+    emb2 = embedder.encode(text, use_cache=True)  # SHOUDL BE CACHEDDDD
     time2 = time.time() - start
     
     print(f"  First encoding: {time1*1000:.2f}ms")
@@ -404,5 +315,5 @@ if __name__ == "__main__":
     print(f"  Speedup: {time1/time2:.1f}x")
     print(f"  Embeddings match: {np.allclose(emb1, emb2)}")
     
-    print("\n" + "="*60)
+
     print("✓ All tests passed!")

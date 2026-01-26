@@ -138,14 +138,16 @@ def main():
     print("=" * 70)
 
     df = load_data(Config.system.data_path)
-
+    #picking one learner to test the system with it 
     sample_learner = df.iloc[0].to_dict()
     learner_id = f"{sample_learner['id_student']}_{sample_learner['code_module']}"
-
+	
     print(f"\n PROCESSING LEARNER NUMBER: {learner_id}")
-
+    #creating a workfwlow with clean state	
     initial_state = create_initial_state(learner_id, sample_learner)
-
+    
+    #initliaze the orchestrator and run it 
+    
     orchestrator = Orchestrator()
     final_state = orchestrator.run(initial_state)
 
@@ -158,7 +160,7 @@ def main():
     export_results(final_state, output_file)
 
     # DEBUG BLOCK (now in correct scope)
-    print("\n🔍 DEBUG - Checking agent execution:")
+    print("\n DEBUG - Checking agent execution:")
     print(f"  Profiling complete: {final_state.get('profiling_complete', False)}")
     print(f"  Path planning complete: {final_state.get('path_planning_complete', False)}")
     print(f"  Content generation complete: {final_state.get('content_generation_complete', False)}")

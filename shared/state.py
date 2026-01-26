@@ -3,6 +3,8 @@ from typing import Dict, List, Any, Optional, TypedDict
 from dataclasses import dataclass, field
 from datetime import datetime
 
+###defines the shared memory of all agents 
+
 @dataclass
 class LearnerState:
     """State representing a learner throughout the pipeline"""
@@ -29,8 +31,7 @@ class LearnerState:
 
 class SystemState(TypedDict, total=False):
     """
-    System-wide state for LangGraph orchestration
-    Compatible with LangGraph's state management
+   langgraph comptaible 
     """
     # Learner identification
     learner_id: str

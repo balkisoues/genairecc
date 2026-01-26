@@ -2,7 +2,6 @@
 agents/profiling_agent.py
 
 """
-
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import KMeans
@@ -16,19 +15,18 @@ from config.settings import Config
 
 class ProfilingAgent:
     """
-    Agent 1: Profiling Agent
-    
-    Continuously analyzes learner interactions, performance history, and preferences
-    using embeddings and clustering techniques to build dynamic learner profiles.
+    agent 1: Profiling Agent
+    analyzes learner interactions+ perf history + preferences
+    w/ embeddings and clustering techniques to build dynamic learner profiles.
     """
 
     def __init__(self):
-        """Initialize Profiling Agent"""
+        """initialize profiling agent"""
         self.embedding_model = SentenceTransformer(Config.model.embedding_model)
         self.cluster_model = self._initialize_clustering()
         self.scaler = StandardScaler()
         
-        # Initialize ChromaDB collection for learner profiles
+        # initialize chromadb collection for learner profiles
         self.chroma_client = chromadb.Client()
         try:
             self.collection = self.chroma_client.get_collection("learner_profiles")
@@ -39,26 +37,20 @@ class ProfilingAgent:
 
     def execute(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Execute profiling agent
-        
-        Args:
-            state: Current system state containing learner_data
-            
-        Returns:
-            Updated state with profile information
+        exec of profiling agens w/args being the current state containing the learner_data and returns the updated state with profule info 
         """
-        print("🔍 [PROFILING AGENT] Analyzing learner profile")
+        print("[PROFILING AGENT] Analyzing learner profile")
         
-        # Initialize agent_logs if needed
+        # agent logs if needed
         if 'agent_logs' not in state:
             state['agent_logs'] = []
         
         try:
-            # Get learner_data from state
+            # getting learner_data from state
             learner_data = state.get('learner_data')
             learner_id = state.get('learner_id')
             
-            if not learner_data:
+            if not learner_data: #debugging
                 error_msg = 'No learner_data provided in state'
                 print(f" {error_msg}")
                 state['errors'] = state.get('errors', []) + [error_msg]
@@ -66,27 +58,27 @@ class ProfilingAgent:
                 state['agent_logs'].append(" Profiling Agent: Failed - No learner data")
                 return state
             
-            # Generate complete profile
+            # generate complete profile
             profile = self._generate_profile(learner_data)
             
-            # Generate embedding for similarity search
+            # generate embedding for similarity semantic search
             embedding = self._generate_embedding(profile)
             
-            # Assign cluster
+            # assign cluster
             features = self._extract_features(profile)
             cluster_id = self._assign_cluster(features)
             profile['cluster_id'] = int(cluster_id)
             
-            # Determine learning style based on behavior patterns
+            # determine learning style based on behavior patterns
             profile['learning_style'] = self._determine_learning_style(profile)
             
-            # Store in vector database
+            # store in vector db
             if learner_id:
                 self._store_in_vectordb(learner_id, profile, embedding)
             
-            # Update state with BOTH keys (for compatibility)
+            # update state with BOTH keys 
             state['profile'] = profile
-            state['learner_profile'] = profile  # Alias for display_results
+            state['learner_profile'] = profile  # alias for display_results
             state['profiling_complete'] = True
             state['agent_logs'].append("✓ Profiling Agent: Profile generated successfully")
             
@@ -108,38 +100,29 @@ class ProfilingAgent:
             state['agent_logs'].append(f" Profiling Agent: Failed - {str(e)}")
             return state
 
-    # ======================================================================
-    # Core Profile Generation
-    # ======================================================================
+
+    # MAIN PROFIEL GENERATION
 
     def _generate_profile(self, data: Dict) -> Dict[str, Any]:
         """
-        Convert raw learner data into structured profile
-        
-        Args:
-            data: Raw learner data from CSV
-            
-        Returns:
-            Structured learner profile dictionary
+        converting raw learner data into structered profile 
+        with args being data from csv and returning a full on structered learner profile dic
         """
-        # Basic profile information
+        # basic profile information
         profile = {
-            # Identifiers
+
             'id_student': data.get('id_student'),
             'code_module': data.get('code_module', ''),
             'code_presentation': data.get('code_presentation', ''),
             
-            # Performance metrics
             'avg_score': float(data.get('avg_score', 0)),
             'final_result': data.get('final_result', 'unknown'),
             'studied_credits': int(data.get('studied_credits', 0)),
             
-            # Engagement metrics
             'total_clicks': int(data.get('total_clicks', 0)),
             'engagement_level': data.get('engagement_level', 'medium'),
             'num_prev_attempts': int(data.get('num_of_prev_attempts', 0)),
             
-            # Demographics
             'gender': data.get('gender', 'unknown'),
             'age_band': data.get('age_band', 'unknown'),
             'region': data.get('region', 'unknown'),
@@ -147,7 +130,6 @@ class ProfilingAgent:
             'imd_band': data.get('imd_band', 'unknown'),
             'disability': data.get('disability', 'N'),
             
-            # Computed fields (will be filled by other methods)
             'cluster_id': None,
             'learning_style': None,
             'engagement_score': self._compute_engagement_score(data),
@@ -158,20 +140,14 @@ class ProfilingAgent:
 
     def _compute_engagement_score(self, data: Dict) -> float:
         """
-        Compute engagement score from learner data
-        
-        Args:
-            data: Learner data dictionary
-            
-        Returns:
-            Engagement score between 0 and 1
+        compute  engagement score from learner data with args learner data from output of func aboce and returning the engagement cores 0 , 1 
         """
         total_clicks = int(data.get('total_clicks', 0))
         
-        # Normalize clicks (assuming max ~10000 clicks)
+        # normalize clicks disons max 10000 clicks
         clicks_score = min(total_clicks / 10000, 1.0)
         
-        # Engagement level mapping
+	#elevel mapping 
         engagement_map = {'low': 0.3, 'medium': 0.6, 'high': 0.9}
         engagement_level = data.get('engagement_level', 'medium')
         level_score = engagement_map.get(engagement_level, 0.6)
@@ -181,13 +157,7 @@ class ProfilingAgent:
 
     def _compute_risk_level(self, data: Dict) -> str:
         """
-        Compute risk level (dropout/failure risk)
-        
-        Args:
-            data: Learner data dictionary
-            
-        Returns:
-            Risk level: 'low', 'medium', or 'high'
+        compute risk level dropout failure risk with args being data dic and returning low medium or high risk 
         """
         score = float(data.get('avg_score', 0))
         engagement = data.get('engagement_level', 'medium')
@@ -195,7 +165,7 @@ class ProfilingAgent:
         
         risk_score = 0
         
-        # Score-based risk
+        # score-based risk
         if score < 40:
             risk_score += 3
         elif score < 60:
@@ -203,19 +173,19 @@ class ProfilingAgent:
         elif score < 75:
             risk_score += 1
         
-        # Engagement-based risk
+        # engagement-based risk
         if engagement == 'low':
             risk_score += 2
         elif engagement == 'medium':
             risk_score += 1
         
-        # Previous attempts
+        # previous attempts
         if prev_attempts > 1:
             risk_score += 2
         elif prev_attempts == 1:
             risk_score += 1
         
-        # Classify risk
+        # classify risk
         if risk_score >= 5:
             return 'high'
         elif risk_score >= 3:
@@ -225,35 +195,29 @@ class ProfilingAgent:
 
     def _determine_learning_style(self, profile: Dict) -> str:
         """
-        Determine learning style based on behavior patterns
-        
-        Args:
-            profile: Learner profile dictionary
-            
-        Returns:
-            Learning style category
+        determine learning style based on behavior patterns w args learner profile  dic and returning learning style catego 
         """
         engagement = profile['engagement_level']
         clicks = profile['total_clicks']
         score = profile['avg_score']
         
-        # High engagement + high clicks = Active learner
+        # high engagement + high clicks = active learner
         if engagement == 'high' and clicks > 5000:
             return 'active_explorer'
         
-        # High score + medium engagement = Efficient learner
+        # high score + medium engagement = efficient learner
         elif score > 75 and engagement in ['medium', 'high']:
             return 'efficient_learner'
         
-        # Low engagement = Passive learner
+        # low engagement = PASSSSIVE LEARNER
         elif engagement == 'low':
             return 'passive_learner'
         
-        # Multiple attempts = Persistent learner
+        # multiple attempts = persistent learner
         elif profile['num_prev_attempts'] > 0:
             return 'persistent_learner'
         
-        # Default
+        # par defaut 
         else:
             return 'balanced_learner'
 
@@ -262,15 +226,7 @@ class ProfilingAgent:
     # ======================================================================
 
     def _generate_embedding(self, profile: Dict) -> np.ndarray:
-        """
-        Generate semantic embedding from profile
-        
-        Args:
-            profile: Learner profile dictionary
-            
-        Returns:
-            Embedding vector
-        """
+        """generate semantic embedding from profile args learner profile dic and return elbedding vetor """
         text = (
             f"Student {profile['id_student']} in module {profile['code_module']}. "
             f"Average score {profile['avg_score']:.1f}, "
@@ -286,19 +242,14 @@ class ProfilingAgent:
 
     def _extract_features(self, profile: Dict) -> np.ndarray:
         """
-        Extract numerical features for clustering
-        
-        Args:
-            profile: Learner profile dictionary
-            
-        Returns:
-            Feature vector
+        extract numerical features for clustering
+        args being learner profile dic and return feature vectore
         """
-        # Categorical mappings
+        # categorical mappings
         engagement_map = {'low': 0, 'medium': 1, 'high': 2}
         result_map = {'Withdrawn': 0, 'Fail': 1, 'Pass': 2, 'Distinction': 3, 'unknown': 1}
         
-        features = np.array([
+        features = np.array([    #building feature vector 
             profile['avg_score'],
             profile['total_clicks'],
             profile['studied_credits'],
@@ -306,13 +257,13 @@ class ProfilingAgent:
             engagement_map.get(profile['engagement_level'], 1),
             result_map.get(profile['final_result'], 1),
             1 if profile['disability'] == 'Y' else 0,
-            profile.get('engagement_score', 0.5) * 100  # Scale to similar range
+            profile.get('engagement_score', 0.5) * 100  # scale to similar range cuz normalized 
         ])
         
         return features
 
     def _initialize_clustering(self) -> KMeans:
-        """Initialize KMeans clustering model"""
+        """kmeans model for clustering student with same level"""
         return KMeans(
             n_clusters=Config.profiling.n_clusters,
             random_state=42,
@@ -320,44 +271,29 @@ class ProfilingAgent:
         )
 
     def _assign_cluster(self, features: np.ndarray) -> int:
-        """
-        Assign learner to cluster
-        
-        Args:
-            features: Feature vector
-            
-        Returns:
-            Cluster ID
-        """
-        # Reshape for single sample prediction
+        """ assign learner to cluster input feature vector from above and output cluster id """
+        # reshape for single prediction
         features_reshaped = features.reshape(1, -1)
         
-        # For initial clustering, we need to fit the model
-        # In production, you'd load a pre-trained model
-        # For now, we'll just return a mock cluster based on features
+
+        # mock cluster based on features
         
-        # Simple heuristic clustering based on score and engagement
+        #simple heuristic clustering based on score and engagement
         score = features[0]
         engagement = features[4]
         
         if score > 75 and engagement >= 1.5:
-            return 0  # High performers
+            return 0  # high performers
         elif score > 60:
-            return 1  # Medium performers
+            return 1  # medium performers
         elif score > 40:
-            return 2  # At-risk learners
+            return 2  # at-risk learners
         else:
-            return 3  # High-risk learners
+            return 3  # high-risk learners
 
     def _store_in_vectordb(self, learner_id: str, profile: Dict, embedding: np.ndarray):
         """
-        Store profile in ChromaDB vector database
-        
-        Args:
-            learner_id: Unique learner identifier
-            profile: Learner profile dictionary
-            embedding: Embedding vector
-        """
+       store all in bd         """
         try:
             self.collection.upsert(
                 ids=[learner_id],
@@ -373,25 +309,15 @@ class ProfilingAgent:
             )
             print(f"  ✓ Stored in vector database")
         except Exception as e:
-            print(f"  ⚠ Warning: Could not store in vector DB: {str(e)}")
+            print(f" Warning: Could not store in vector DB: {str(e)}")
 
-    # ======================================================================
-    # Utility Methods
-    # ======================================================================
-
+   
     def find_similar_learners(self, learner_id: str, n: int = 5) -> List[Dict]:
         """
         Find similar learners using vector similarity
-        
-        Args:
-            learner_id: Target learner ID
-            n: Number of similar learners to return
-            
-        Returns:
-            List of similar learner profiles
         """
         try:
-            # Get the embedding for this learner
+            # get the embedding for this learner
             result = self.collection.get(ids=[learner_id], include=['embeddings'])
             
             if not result['embeddings']:
@@ -399,13 +325,13 @@ class ProfilingAgent:
             
             embedding = result['embeddings'][0]
             
-            # Query for similar learners
+            # query for similar learners
             similar = self.collection.query(
                 query_embeddings=[embedding],
                 n_results=n + 1  # +1 because it includes the query learner
             )
             
-            # Filter out the query learner itself
+            # filter out the query learner itself
             similar_learners = []
             for i, sid in enumerate(similar['ids'][0]):
                 if sid != learner_id:
@@ -422,16 +348,12 @@ class ProfilingAgent:
             return []
 
 
-# ======================================================================
 # TESTING
-# ======================================================================
 
 if __name__ == "__main__":
     from shared.state import create_initial_state
 
-    print("="*70)
     print("PROFILING AGENT TEST")
-    print("="*70)
 
     test_learner = {
         'id_student': '28400',
@@ -451,14 +373,14 @@ if __name__ == "__main__":
         'imd_band': '20-30%'
     }
 
-    # Create initial state
+    # create initial state
     state = create_initial_state('28400_AAA_2013J', test_learner)
     
-    # Initialize and execute agent
+    # initialize and execute agent
     agent = ProfilingAgent()
     result_state = agent.execute(state)
 
-    # Display results
+    # display results
     print("\n" + "="*70)
     print("RESULTS")
     print("="*70)

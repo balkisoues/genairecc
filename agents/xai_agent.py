@@ -1,14 +1,7 @@
 """
 agents/xai_agent.py
-
-XAI Agent: Generates explanations using SHAP/LIME + agent reasoning traces.
-
-Input (reads from state):
-- ALL previous agent outputs
-
-Output (writes to state):
-- explanations: Dict
-- next_agent: 'end'
+reads from state aka all previous agent outputs
+and outputs explanations and next_agent being the endddddd of this multiagent sys
 """
 
 from typing import Dict, List, Any
@@ -19,22 +12,22 @@ from config.settings import Config
 
 
 class XAIAgent:
-    """Agent 5: Explainability (SHAP + Reasoning Traces)"""
+    """agent 5: xai SHAP + reasoning traces"""
 
     def __init__(self):
         self.llm = Ollama(model=Config.model.llm_model)
         print("✓ XAI Agent initialized")
 
     def execute(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute explainability generation"""
-        print("🔍 [XAI AGENT] Generating explanations")
+        """execute explainability generation"""
+        print("[XAI AGENT] Generating explanations")
 
-        # Initialize agent_logs if needed
+        # initialize agent_logs if needed
         if 'agent_logs' not in state:
             state['agent_logs'] = []
 
         try:
-            # Your existing logic here...
+            #call genearting explication fucntion 
             explanations = self._generate_explanations(state)
 
             state['explanations'] = explanations
@@ -56,41 +49,33 @@ class XAIAgent:
 
     def _generate_explanations(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate comprehensive explanations combining:
-        - Post-hoc explainability (SHAP-like)
-        - Agent reasoning traces
-        - Multi-view explanations
-
-        Args:
-            state: Complete system state with all agent outputs
-
-        Returns:
-            Dictionary containing all explanation types
+        generate comprehensive explanations combining shap, agent reasoning traces and multi view exp and args being the whole state (alla agents outputs) and output dictionnary with all explanantion types
+        
         """
         profile = state.get('profile', {})
         learning_path = state.get('learning_path', [])
         recommendations = state.get('recommendations', {})
         agent_logs = state.get('agent_logs', [])
 
-        # 1. Feature importance (SHAP-like)
+        # SHAP
         feature_importance = self._explain_features(profile)
 
-        # 2. Explain recommendations
+        # explain recommendations
         recommendation_rationale = self._explain_recommendations(
             recommendations,
             profile
         )
 
-        # 3. Explain learning path
+        #  explain learning path
         path_justification = self._explain_path(
             learning_path,
             profile
         )
 
-        # 4. Generate counterfactuals
+        #generate counterfactuals
         counterfactuals = self._generate_counterfactuals(profile)
 
-        # 5. Compile explanations
+        # compile explanations
         explanations = {
             'feature_importance': feature_importance,
             'recommendation_rationale': recommendation_rationale,
@@ -99,7 +84,7 @@ class XAIAgent:
             'agent_reasoning': agent_logs
         }
 
-        # 6. Generate view-specific explanations
+        # generate view-specific explanations
         explanations['learner_view'] = self._generate_learner_explanation(
             explanations,
             profile
@@ -111,16 +96,16 @@ class XAIAgent:
         return explanations
 
     def _explain_features(self, profile: Dict) -> Dict:
-        """SHAP-like feature importance (simplified)"""
+        """SHAP simplified"""
         importance = {
-            'avg_score': profile.get('avg_score', 0) / 100,
+            'avg_score': profile.get('avg_score', 0) / 100,  ####interpretable weighting 
             'engagement_level': (
                 0.3 if profile.get('engagement_level') == 'high' else 0.1
             ),
             'learning_style': 0.25,
             'num_prev_attempts': 0.15
         }
-
+	#estimating whoch profile attribute influenced the desicion the most and ranks thems for xai
         top_features = sorted(
             importance.items(),
             key=lambda x: x[1],
@@ -130,8 +115,8 @@ class XAIAgent:
         return {
             'all_features': importance,
             'top_influencers': top_features
-        }
-
+        }	
+#returns all feature weights and top3 influencers
     def _explain_recommendations(
         self,
         recommendations: Dict,
@@ -144,7 +129,7 @@ class XAIAgent:
             f"{profile.get('learning_style', 'balanced')} learning style and "
             f"average score of {profile.get('avg_score', 0)} indicate this is optimal."
         )
-
+#basic explanantion
     def _explain_path(self, path: List[Dict], profile: Dict) -> str:
         """Explain learning path construction"""
         concepts = [unit['concept'] for unit in path[:3]]

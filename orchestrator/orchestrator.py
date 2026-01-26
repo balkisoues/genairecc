@@ -1,7 +1,6 @@
 """
 orchestrator/orchestrator.py
-
-Coordinates the execution of all agents using LangGraph.
+coordinates the execution of all agents using LangGraph.
 """
 
 from typing import Dict, Any
@@ -16,15 +15,14 @@ from agents.xai_agent import XAIAgent
 
 
 class Orchestrator:
-    """Orchestrates multi-agent workflow using LangGraph"""
+    """orchestrates multi-agent workflow using LangGraph"""
     
     def __init__(self):
-        """Initialize Orchestrator with all agents"""
-        print("="*70)
+        """initialize orchestrator with all agents"""
+
         print(" ORCHESTRATOR: Initializing Multi-Agent System")
-        print("="*70)
         
-        # Initialize agents
+        # initialize agents
         self.profiling_agent = ProfilingAgent()
         self.path_planning_agent = PathPlanningAgent()
         self.content_generation_agent = ContentGenerationAgent()
@@ -33,23 +31,23 @@ class Orchestrator:
         
         print("✓ All agents initialized")
         
-        # Build LangGraph workflow
+        #build LangGraph workflow
         self._build_workflow()
         print("✓ LangGraph workflow compiled")
     
     def _build_workflow(self):
-        """Build LangGraph workflow connecting all agents"""
-        # Create workflow graph
+        """ building lnaggrpah worlkflow"""
+        # create workflow graph
         workflow = StateGraph(SystemState)
         
-        # Add nodes for each agent
+        # add nodes for each agent
         workflow.add_node("profiling", self._profiling_node)
         workflow.add_node("path_planning", self._path_planning_node)
         workflow.add_node("content_generation", self._content_generation_node)
         workflow.add_node("recommendation", self._recommendation_node)
         workflow.add_node("xai", self._xai_node)
         
-        # Define workflow edges (sequential flow)
+        # define workflow edges (sequential flow)
         workflow.set_entry_point("profiling")
         workflow.add_edge("profiling", "path_planning")
         workflow.add_edge("path_planning", "content_generation")
@@ -57,11 +55,11 @@ class Orchestrator:
         workflow.add_edge("recommendation", "xai")
         workflow.add_edge("xai", END)
         
-        # Compile the workflow
+        # compile the workflow
         self.app = workflow.compile()
     
     def _profiling_node(self, state: SystemState) -> SystemState:
-        """Profiling agent node"""
+        """profiling agent node"""
         try:
             result = self.profiling_agent.execute(state)
             print(f"  ✓ Profiling node completed")
@@ -132,18 +130,11 @@ class Orchestrator:
     
     def run(self, state: SystemState) -> SystemState:
         """
-        Run the multi-agent workflow
-        
-        Args:
-            state: Initial system state
-            
-        Returns:
-            Final system state after all agents execute
-        """
+        run all agents with arg being intiial sys state and final result being the state after all agents' execution      """
         print("\n Starting multi-agent workflow...\n")
         
         try:
-            # Run the workflow
+            # run the workflow
             final_state = self.app.invoke(state)
             
             print("\n Workflow completed successfully!")
@@ -157,7 +148,7 @@ class Orchestrator:
             raise
     
     def get_graph_visualization(self):
-        """Return Mermaid diagram of the graph"""
+        """return Mermaid diagram of the graph"""
         try:
             return self.app.get_graph().draw_mermaid()
         except Exception:
