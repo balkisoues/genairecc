@@ -2,7 +2,7 @@
 
 ---
 
-## 📌 Project Overview
+## Project Overview
 
 This project proposes an **Explainable Multi-Agent Generative Recommendation System**
 for **personalized e-learning**.  
@@ -11,21 +11,21 @@ It combines **Agentic AI, Generative AI (LLMs), and Explainable AI (XAI)** to re
 
 ---
 
-## 🎯 Motivation & Context
+## Motivation & Context
 
 Current e-learning recommendation systems (collaborative filtering, deep learning)
 suffer from major limitations:
 
-- ❌ **Lack of adaptability**: no dynamic reasoning or planning
-- ❌ **No content generation**: they recommend but do not create learning material
-- ❌ **Black-box models**: lack of explainability → low user trust
+-  **Lack of adaptability**: no dynamic reasoning or planning
+-  **No content generation**: they recommend but do not create learning material
+-  **Black-box models**: lack of explainability → low user trust
 
 This project addresses these issues through a **collaborative multi-agent architecture**
 capable of reasoning, generating, and explaining personalized learning pathways.
 
 ---
 
-## 🧪 Scientific Objectives
+##  Scientific Objectives
 
 - Design a **collaborative multi-agent architecture** (memory, planning, communication)
 - Integrate **LLMs + RAG** for personalized content generation
@@ -34,7 +34,7 @@ capable of reasoning, generating, and explaining personalized learning pathways.
 
 ---
 
-## 🧠 Multi-Agent Architecture
+##  Multi-Agent Architecture
 
 | Agent | Role | Technologies |
 |------|-----|-------------|
@@ -47,7 +47,7 @@ capable of reasoning, generating, and explaining personalized learning pathways.
 
 ---
 
-## 🔄 Technical Pipeline
+##  Technical Pipeline
 
 1. Learner interaction collection  
 2. Embedding encoding  
@@ -59,7 +59,7 @@ capable of reasoning, generating, and explaining personalized learning pathways.
 
 ---
 
-## 🔍 Explainable AI Methods
+##  Explainable AI Methods
 
 | Method | Example |
 |------|--------|
@@ -69,7 +69,7 @@ capable of reasoning, generating, and explaining personalized learning pathways.
 
 ---
 
-## 📊 Datasets
+##  Datasets
 
 - **OULAD**
 - **EdNet**
@@ -77,7 +77,7 @@ capable of reasoning, generating, and explaining personalized learning pathways.
 
 ---
 
-## 📈 Evaluation Metrics
+##  Evaluation Metrics
 
 ### Recommendation
 - NDCG
@@ -96,15 +96,15 @@ capable of reasoning, generating, and explaining personalized learning pathways.
 
 ---
 
-## 🏆 Expected Contributions
+##  Expected Contributions
 
-- ✅ A unified **Agentic AI + GenAI + XAI framework** for e-learning
-- ✅ Cognitive explanation methods based on **multi-agent reasoning**
-- ✅ Empirical evaluation of **user trust and transparency**
+-  A unified **Agentic AI + GenAI + XAI framework** for e-learning
+-  Cognitive explanation methods based on **multi-agent reasoning**
+-  Empirical evaluation of **user trust and transparency**
 
 ---
 
-## 🧩 Project Structure
+##  Project Structure
 
 ```text
 genai_recommender/
